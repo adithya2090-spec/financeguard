@@ -1,0 +1,43 @@
+version: \'3.9\'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: financeguard
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/financeguard
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: password123
+      JWT_SECRET: financeguard-super-secret-jwt-key-2026
+      ML_ENGINE_URL: http://ml-engine:8000
+    depends_on:
+      - postgres
+
+  ml-engine:
+    build: ./ml-engine
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_URL: http://localhost:8080
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
